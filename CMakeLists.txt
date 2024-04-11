@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(tokenizer CXX)
+project(tokenizer LANGUAGES C CXX)
 include(CMakePackageConfigHelpers)
 include(CTest)
 include(GNUInstallDirs)
@@ -8,6 +8,8 @@ include(GNUInstallDirs)
 # ABI version
 # http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html
 set(SONAME 10)
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_C_FLAGS_DEBUG   "-g")
 
 add_subdirectory(re2)
 
@@ -31,3 +33,13 @@ set_target_properties(bpe_test
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin"
 )
 target_link_libraries(bpe_test PRIVATE tokenizer re2::re2)
+
+add_executable(consoleSampleApp SampleApp/SampleApp/main.c SampleApp/SampleApp/use_re2.cpp)
+set_target_properties(consoleSampleApp PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin"
+  CXX_STANDARD 17
+  C_STANDARD 11
+)
+target_include_directories(consoleSampleApp PUBLIC . re2)
+#target_include_directories(consoleSampleApp PUBLIC ../../ ../../re2)
+target_link_libraries(consoleSampleApp PRIVATE tokenizer re2::re2)

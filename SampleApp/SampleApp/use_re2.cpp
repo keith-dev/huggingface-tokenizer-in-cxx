@@ -4,14 +4,17 @@
 //
 //  Created by Yi Wang on 2/12/23.
 //
+#include "use_re2.h"
 
 #include <re2/re2.h>
 #include <re2/stringpiece.h>
-#include <stdio.h>
 #include <tokenizer/bpe.h>
 
+#include <fstream>
 #include <iostream>
 #include <string>
+
+#include <assert.h>
 
 extern "C" void test_tokenizer(const char* merges_path,
                                const char* vocab_path) {
