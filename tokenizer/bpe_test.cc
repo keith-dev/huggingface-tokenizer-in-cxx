@@ -1,5 +1,9 @@
 #include "bpe.h"
 
+#include <cassert>
+#include <fstream>
+#include <iostream>
+
 RE2 re(
     "('s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| "
     "?[^\\s\\p{L}\\p{N}]+|\\s+\\(?!\\S\\)|\\s+)");
@@ -38,14 +42,15 @@ void test_byte_encode_token() {
 }
 
 void test_load_merge_rules() {
+  constexpr size_t expected_merge_size = 50000;
   BPERanks bpe_ranks;
-  std::fstream merges("/tmp/merges.txt", std::ios::in);
+  std::fstream merges("tokenizer/assets/merges.txt");
   load_merge_rules(merges, &bpe_ranks);
-  assert(bpe_ranks.size() == 50000);
+  assert(bpe_ranks.size() == expected_merge_size);
 
   auto iter = bpe_ranks.find({utf8_to_wstring("Ġg"), utf8_to_wstring("azed")});
   assert(iter != bpe_ranks.end());
-  assert(iter->second = 49999);
+  assert(iter->second == (expected_merge_size - 1));
 }
 
 void test_get_pairs() {
@@ -58,7 +63,7 @@ void test_get_pairs() {
 
 void test_bpe() {
   BPERanks bpe_ranks;
-  std::fstream merges("/tmp/merges.txt", std::ios::in);
+  std::fstream merges("tokenizer/assets/merges.txt", std::ios::in);
   load_merge_rules(merges, &bpe_ranks);
   assert(bpe_ranks.size() == 50000);
 
@@ -73,7 +78,7 @@ void test_bpe() {
 
 auto _print_string_vec = [](std::vector<std::string>& v) {
   // To be compatible with Python's print(*lst, sep=', ')
-  for (int i = 0; i < v.size(); ++i) {
+  for (size_t i = 0; i < v.size(); ++i) {
     std::cout << v[i];
     if (i < v.size() - 1) std::cout << ", ";
   }
@@ -84,7 +89,7 @@ void test_tokenize() {
   assert(re.ok());  // compiled; if not, see re.error();
 
   BPERanks bpe_ranks;
-  std::fstream merges("/tmp/merges.txt", std::ios::in);
+  std::fstream merges("tokenizer/assets/merges.txt", std::ios::in);
   load_merge_rules(merges, &bpe_ranks);
 
   std::unordered_map<uint8_t, wchar_t> b2u;
@@ -105,21 +110,21 @@ void test_tokenize_regression() {
   assert(re.ok());  // compiled; if not, see re.error();
 
   BPERanks bpe_ranks;
-  std::fstream merges("/tmp/merges.txt", std::ios::in);
+  std::fstream merges("tokenizer/assets/merges.txt", std::ios::in);
   load_merge_rules(merges, &bpe_ranks);
 
   std::unordered_map<uint8_t, wchar_t> b2u;
   bytes_to_unicode(&b2u, NULL);
 
-  // In order to make sure that /tmp/sample.txt contains many lines of
+  // In order to make sure that tokenizer/assets/sample.txt contains many lines of
   // text of different langauges, I download the lyrics data from
   // https://www.kaggle.com/datasets/neisse/scrapped-lyrics-from-6-genres,
   // and ran the following commands to randomly sample 10000 lines.
   /*
-     cat /tmp/lyrics-data.csv | head -n 1000000  | awk 'NF' | sort | \
-     uniq | sort -R | head -n 10000 > /tmp/sample.txt
+     cat tokenizer/assets/lyrics-data.csv | head -n 1000000  | awk 'NF' | sort | \
+     uniq | sort -R | head -n 10000 > tokenizer/assets/sample.txt
   */
-  std::fstream ins("/tmp/sample.txt", std::ios::in);
+  std::fstream ins("tokenizer/assets/sample.txt", std::ios::in);
   std::string line;
   while (std::getline(ins, line)) {
     std::vector<std::string> result;
@@ -131,7 +136,7 @@ void test_tokenize_regression() {
 void test_load_vocab() {
   std::unordered_map<std::string, int> t2i;
   std::unordered_map<int, std::string> i2t;
-  std::fstream vocab_txt("/tmp/vocab.txt", std::ios::in);
+  std::fstream vocab_txt("tokenizer/assets/vocab.txt", std::ios::in);
   load_vocab(vocab_txt, &t2i, &i2t);
   assert(t2i.size() == 50257);
   assert(i2t.size() == 50257);
@@ -141,7 +146,7 @@ void test_load_vocab() {
 
 void test_encode_decode() {
   BPERanks bpe_ranks;
-  std::fstream merges("/tmp/merges.txt", std::ios::in);
+  std::fstream merges("tokenizer/assets/merges.txt", std::ios::in);
   load_merge_rules(merges, &bpe_ranks);
 
   std::unordered_map<uint8_t, wchar_t> b2u;
@@ -150,7 +155,7 @@ void test_encode_decode() {
 
   std::unordered_map<std::string, int> t2i;
   std::unordered_map<int, std::string> i2t;
-  std::fstream vocab_txt("/tmp/vocab.txt", std::ios::in);
+  std::fstream vocab_txt("tokenizer/assets/vocab.txt", std::ios::in);
   load_vocab(vocab_txt, &t2i, &i2t);
 
   std::vector<std::string> candidates = {

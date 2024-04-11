@@ -1,5 +1,12 @@
 #include "bpe.h"
 
+#include <climits>
+#include <codecvt>
+#include <fstream>
+#include <locale>
+#include <set>
+#include <string>
+
 std::wstring utf8_to_wstring(const std::string& str) {
   std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
   return myconv.from_bytes(str);
@@ -78,7 +85,7 @@ void get_pairs(const std::wstring& word,
   if (word.size() < 2) return;
 
   wchar_t previous = word[0];
-  for (int i = 1; i < word.size(); i++) {
+  for (size_t i = 1; i < word.size(); i++) {
     pairs->push_back({std::wstring(1, previous), std::wstring(1, word[i])});
     previous = word[i];
   }
@@ -107,7 +114,7 @@ void bpe(const std::wstring& token, const BPERanks& bpe_ranks,
     int min_score = INT_MAX;
     int to_merge = -1;  // indices into pairs.
 
-    for (int i = 0; i < pairs.size(); ++i) {
+    for (size_t i = 0; i < pairs.size(); ++i) {
       if (merged.find(i) == merged.end()) {  // pair i is not merged.
         auto iter = bpe_ranks.find(pairs[i]);
         int score = iter != bpe_ranks.end() ? iter->second : INT_MAX;
@@ -125,14 +132,14 @@ void bpe(const std::wstring& token, const BPERanks& bpe_ranks,
 
     int l = _left(to_merge, merged);
     if (l >= 0) pairs[l].second = merge_into;
-    int r = _right(to_merge, pairs.size(), merged);
+    size_t r = _right(to_merge, pairs.size(), merged);
     if (r < pairs.size()) pairs[r].first = merge_into;
   }  // end while (true)
 
   if (merged.size() == pairs.size())
     result->push_back(token);
   else {
-    for (int i = 0; i < pairs.size(); ++i) {
+    for (size_t i = 0; i < pairs.size(); ++i) {
       if (merged.find(i) == merged.end()) {
         if (_left(i, merged) < 0) result->push_back(pairs[i].first);
         result->push_back(pairs[i].second);

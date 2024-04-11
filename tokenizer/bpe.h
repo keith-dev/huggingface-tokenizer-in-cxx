@@ -4,13 +4,10 @@
 #include <re2/re2.h>
 #include <re2/stringpiece.h>
 
-#include <codecvt>
-#include <fstream>
-#include <iostream>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 std::wstring utf8_to_wstring(const std::string& str);
 
